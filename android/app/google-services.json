@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610020552438",
+    "project_id": "factodoctor-2d445",
+    "storage_bucket": "factodoctor-2d445.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610020552438:android:ea1ec064696068398106d7",
+        "android_client_info": {
+          "package_name": "com.example.factodoctor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBooyA1Azzqwv2eERwhZndf4ZhpVq_2BP8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
