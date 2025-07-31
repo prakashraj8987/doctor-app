@@ -1,34 +1,36 @@
 ﻿name: factodoctor
 description: Doctor Telemedicine App for FactoHR
-
 publish_to: 'none'
-
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '^3.8.0'  # ← CHANGE THIS LINE
+  flutter: ">=3.19.0"
 
 dependencies:
   flutter:
     sdk: flutter
-
+  
   # ✅ Firebase (Compatible Versions)
   firebase_core: ^2.30.0
   firebase_auth: ^4.17.4
   cloud_firestore: ^4.15.4
   firebase_messaging: ^14.7.4
   firebase_storage: ^11.6.4
-
+  
   # ✅ Agora & Permissions
   agora_rtc_engine: ^6.3.2
   permission_handler: ^11.2.0
-
+  
   # ✅ Notifications
   flutter_local_notifications: ^17.1.0
-
+  
   # ✅ State Management
   provider: ^6.1.2
-
+  
+  # ✅ NEW LINE for Firebase Functions:
+  cloud_functions: ^4.6.4
+  
   # ✅ UI & Utils
   intl: ^0.19.0
   shared_preferences: ^2.2.2
@@ -44,7 +46,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
+  
   # Add your assets if needed
   # assets:
   #   - assets/images/

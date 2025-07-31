@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/call_model.dart';
-import '../../services/call_service.dart';
+// import '../../services/call_service.dart'; // Uncomment when CallService is ready
 import 'call_screen.dart';
 
 class IncomingCallScreen extends StatefulWidget {
@@ -37,6 +37,34 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     super.dispose();
   }
 
+  // Safe method to get patient name first letter
+  String _getPatientInitial() {
+    if (widget.call.patientName.isEmpty) {
+      return 'P'; // Default to 'P' for Patient
+    }
+    return widget.call.patientName.substring(0, 1).toUpperCase();
+  }
+
+  // Safe method to get patient name
+  String _getPatientName() {
+    if (widget.call.patientName.isEmpty) {
+      return 'Unknown Patient';
+    }
+    return widget.call.patientName;
+  }
+
+  // Get call type display
+  String _getCallTypeDisplay() {
+    switch (widget.call.type) {
+      case CallType.video:
+        return 'Video Consultation';
+      case CallType.voice:
+        return 'Voice Call';
+      default:
+        return 'Voice Call';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +88,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
               
               const SizedBox(height: 40),
               
-              // Patient avatar
+              // Patient avatar with animation
               AnimatedBuilder(
                 animation: _scaleAnimation,
                 builder: (context, child) {
@@ -84,7 +112,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                         radius: 80,
                         backgroundColor: Theme.of(context).primaryColor,
                         child: Text(
-                          widget.call.patientName.substring(0, 1).toUpperCase(),
+                          _getPatientInitial(),
                           style: const TextStyle(
                             fontSize: 60,
                             fontWeight: FontWeight.bold,
@@ -101,7 +129,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
               
               // Patient name
               Text(
-                widget.call.patientName,
+                _getPatientName(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -114,7 +142,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
               
               // Patient phone
               Text(
-                widget.call.patientPhone,
+                widget.call.patientPhone.isEmpty ? '+0000000000' : widget.call.patientPhone,
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.7),
                   fontSize: 16,
@@ -123,22 +151,53 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
               
               const SizedBox(height: 16),
               
-              // Call info - FIXED: Removed callType and fee references
+              // Call info
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Video Consultation',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      widget.call.type == CallType.video ? Icons.videocam : Icons.call,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _getCallTypeDisplay(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              
+              // Show consultation fee if available
+              if (widget.call.consultationFee > 0) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '₹${widget.call.consultationFee.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: Colors.green.shade300,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
               
               const Spacer(),
               
@@ -148,17 +207,21 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                 children: [
                   // Reject button
                   GestureDetector(
-                    onTap: () async {
-                      final callService = Provider.of<CallService>(context, listen: false);
-                      await callService.rejectCall(widget.call.id);
-                      Navigator.of(context).pop();
-                    },
+                    onTap: () => _rejectCall(),
                     child: Container(
                       width: 70,
                       height: 70,
                       decoration: const BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red,
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.call_end,
@@ -170,24 +233,21 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   
                   // Accept button
                   GestureDetector(
-                    onTap: () async {
-                      final callService = Provider.of<CallService>(context, listen: false);
-                      await callService.acceptCall(widget.call.id);
-                      
-                      if (mounted) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (_) => CallScreen(call: widget.call),
-                          ),
-                        );
-                      }
-                    },
+                    onTap: () => _acceptCall(),
                     child: Container(
                       width: 70,
                       height: 70,
                       decoration: const BoxDecoration(
                         color: Colors.green,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green,
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.call,
@@ -200,10 +260,149 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
               ),
               
               const SizedBox(height: 40),
+              
+              // Quick actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildQuickAction(
+                    icon: Icons.message,
+                    label: 'Message',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Quick message feature coming soon')),
+                      );
+                    },
+                  ),
+                  _buildQuickAction(
+                    icon: Icons.schedule,
+                    label: 'Schedule',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Schedule feature coming soon')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildQuickAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white70,
+              size: 20,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Accept call handler
+  Future<void> _acceptCall() async {
+    print('📞 Accepting call: ${widget.call.id}');
+    
+    try {
+      // TODO: Uncomment when CallService is ready
+      // final callService = Provider.of<CallService>(context, listen: false);
+      // await callService.acceptCall(widget.call.id);
+      
+      // Temporary success handling
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Call accepted! Connecting...'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate to call screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => CallScreen(call: widget.call),
+          ),
+        );
+      }
+      
+    } catch (e) {
+      print('❌ Error accepting call: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to accept call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Reject call handler  
+  Future<void> _rejectCall() async {
+    print('❌ Rejecting call: ${widget.call.id}');
+    
+    try {
+      // TODO: Uncomment when CallService is ready
+      // final callService = Provider.of<CallService>(context, listen: false);
+      // await callService.rejectCall(widget.call.id);
+      
+      // Temporary handling
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Call declined'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        
+        Navigator.of(context).pop();
+      }
+      
+    } catch (e) {
+      print('❌ Error rejecting call: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to decline call: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        
+        // Still go back even if error
+        Navigator.of(context).pop();
+      }
+    }
   }
 }
